@@ -1,0 +1,99 @@
+ObjC.import('stdlib')
+
+const app = Application.currentApplication();
+app.includeStandardAdditions = true;
+
+// Get Bearer Token
+const TODOIST_TOKEN = $.getenv("TODOIST_TOKEN");
+
+function run(argv) {  
+  var query = argv[0];
+
+  if (query) {
+    // Manually add a task
+    // app.displayDialog("Manually adding task...");
+    var task = {"content": query, "due_string": "tomorrow", "due_lang": "en", "priority": 1};
+    var result = createTask(task);
+    if (result) {
+      var parsed = JSON.parse(result);
+      return parsed.id;
+    }    
+  } else {
+    // app.displayDialog("adding task from outlook...");
+    var Outlook = new Application("/Applications/Microsoft Outlook.app");
+
+    // Focus the application
+    //Outlook.activate();
+
+    var outlook_messages = Outlook.selectedObjects();
+
+    //console.log(`Messages selected: ${outlook_messages.length}`);
+    //outlook_messages.forEach(msg => console.log("Subject: " + msg.subject()));  
+    
+    //var dialogText = "The current date and time is " + (app.currentDate())
+    //app.displayDialog(dialogText);
+    
+    const OUTLOOK_URL_PREFIX = "outlook://";
+    const WORK_PROJECT_ID = "2230763391";
+
+    // Iterate over the selected messages in Outlook
+    outlook_messages.forEach(msg => {
+      var id = msg.id();
+      var subject = msg.subject();
+      var sender = msg.sender().name;
+      var msg_priority = msg.priority();
+      var outlook_url = OUTLOOK_URL_PREFIX + id;
+
+      /*
+      app.displayDialog(`Subject: ${msg.subject()}`);
+      app.displayDialog(`Sender: ${sender}`);
+      app.displayDialog(`Priority: ${msg_priority}`);
+      */
+
+      
+      var priority = msg_priority == "priority high" ? 4 : 1; // Set Task priority based on outlook priority
+      var content = `${subject} for ${sender}`;               // Set content of the Task
+      var task = {"content": content, "due_string": "tomorrow", "due_lang": "en", "priority": priority, "description": outlook_url};
+
+      var result = createTask(task);
+      if (result) {
+        var parsed = JSON.parse(result);
+        return parsed.id;
+      }
+      //app.displayDialog(`priority: ${priority}`);
+      //getProps(Outlook);
+    });
+  } 
+}
+
+function getProps(app) {
+  const props = app.propertiesOfClass("application");
+  props.forEach( p => {
+  let t = app.propertyTypeForNameInClass(p);
+     console.log(`${p} is of type "${t}"`);
+  });  
+}
+
+function create_UUID(){
+    var dt = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (dt + Math.random()*16)%16 | 0;
+        dt = Math.floor(dt/16);
+        return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+    });
+    return uuid;
+}
+
+function createTask(task) {
+  var curlCommand = 'curl https://api.todoist.com/rest/v2/tasks -X POST'
+    + ' --data ' + "'" + JSON.stringify(task) + "'"
+    + ' -H "Content-Type: application/json"'
+    + ' -H "X-Request-Id: ' + create_UUID() + "\""
+    + ' -H "Authorization: Bearer ' + TODOIST_TOKEN + "\"";
+  
+  //app.displayDialog(`curlCommand: ${curlCommand}`);  
+  var result = app.doShellScript(curlCommand);
+  //app.displayDialog(`Result: ${result}`);
+  return result;
+
+}
