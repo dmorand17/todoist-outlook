@@ -1,0 +1,10 @@
+const app = Application.currentApplication();
+app.includeStandardAdditions = true;
+
+app.openLocation(url);
+//set the messageId to text 11 thru -1 of this_URL
+
+var Outlook = new Application("/Applications/Microsoft Outlook.app");
+
+//Focus the application
+Outlook.activate();

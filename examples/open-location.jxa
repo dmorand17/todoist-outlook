@@ -1,0 +1,12 @@
+#!/usr/bin/env osascript -l JavaScript
+
+// GURLGURL
+function GURL(url) {
+  console.log("Hello");
+  const App = Application.currentApplication();
+  App.includeStandardAdditions = true;
+
+  App.doShellScript(`echo "Hello"`);
+  App.doShellScript(`echo ${url} > ~/Downloads/url-arg.txt`);
+  return true;
+}

@@ -22,8 +22,8 @@ function run(argv) {
     // app.displayDialog("adding task from outlook...");
     var Outlook = new Application("/Applications/Microsoft Outlook.app");
 
-    // Focus the application
-    //Outlook.activate();
+    //Focus the application
+    Outlook.activate();
 
     var outlook_messages = Outlook.selectedObjects();
 
@@ -54,7 +54,6 @@ function run(argv) {
       var priority = msg_priority == "priority high" ? 4 : 1; // Set Task priority based on outlook priority
       var content = `${subject} for ${sender}`;               // Set content of the Task
       var task = {"content": content, "due_string": "tomorrow", "due_lang": "en", "priority": priority, "description": outlook_url};
-
       var result = createTask(task);
       if (result) {
         var parsed = JSON.parse(result);
@@ -85,8 +84,9 @@ function create_UUID(){
 }
 
 function createTask(task) {
+  // escape quotes
   var curlCommand = 'curl https://api.todoist.com/rest/v2/tasks -X POST'
-    + ' --data ' + "'" + JSON.stringify(task) + "'"
+    + ' --data ' + "\"" + JSON.stringify(task).replace(/"/g,"\\\"") + "\""
     + ' -H "Content-Type: application/json"'
     + ' -H "X-Request-Id: ' + create_UUID() + "\""
     + ' -H "Authorization: Bearer ' + TODOIST_TOKEN + "\"";
