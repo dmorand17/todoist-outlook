@@ -6,13 +6,24 @@ app.includeStandardAdditions = true;
 // Get Bearer Token
 const TODOIST_TOKEN = $.getenv("TODOIST_TOKEN");
 
+//
+// STATIC Values
+//
+const OUTLOOK_URL_PREFIX = "outlook://";
+const WORK_PROJECT_ID = "2230763391";
+const FOLLOWUP_SECTION_ID = "112165660";
+
+DEFAULT_DUE_STRING = "tomorrow";
+DEFAULT_EMAIL_DUE_STRING = "+3 days";
+DESCRIPTION_TEXT = "**Created:** "
+
 function run(argv) {  
   var query = argv[0];
 
   if (query) {
     // Manually add a task
     // app.displayDialog("Manually adding task...");
-    var task = {"content": query, "due_string": "tomorrow", "due_lang": "en", "priority": 1};
+    var task = {"content": query, "due_string": DEFAULT_DUE_STRING, "due_lang": "en", "priority": 1};
     var result = createTask(task);
     if (result) {
       var parsed = JSON.parse(result);
@@ -32,9 +43,6 @@ function run(argv) {
     
     //var dialogText = "The current date and time is " + (app.currentDate())
     //app.displayDialog(dialogText);
-    
-    const OUTLOOK_URL_PREFIX = "outlook://";
-    const WORK_PROJECT_ID = "2230763391";
 
     // Iterate over the selected messages in Outlook
     outlook_messages.forEach(msg => {
@@ -53,7 +61,13 @@ function run(argv) {
       
       var priority = msg_priority == "priority high" ? 4 : 1; // Set Task priority based on outlook priority
       var content = `${subject} for ${sender}`;               // Set content of the Task
-      var task = {"content": content, "due_string": "tomorrow", "due_lang": "en", "priority": priority, "description": outlook_url};
+      var task = {"content": content
+, "due_string": DEFAULT_EMAIL_DUE_STRING
+, "due_lang": "en"
+, "priority": priority
+, "description": outlook_url
+, "description": DESCRIPTION_TEXT + app.currentDate() + "\n\n" + outlook_url
+, "section_id": FOLLOWUP_SECTION_ID};
       var result = createTask(task);
       if (result) {
         var parsed = JSON.parse(result);
